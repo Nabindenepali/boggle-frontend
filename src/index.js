@@ -1,12 +1,219 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
 
-ReactDOM.render(<App />, document.getElementById('root'));
+function Square(props) {
+    return (
+        <button className={'square' + (props.occupied ? ' occupied' : '')}>
+            {props.value}
+        </button>
+    );
+}
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+class Board extends React.Component {
+    constructor(props) {
+        super(props);
+        const board = [
+            [
+                {letter: 'D', occupied: false},
+                {letter: 'E', occupied: false},
+                {letter: 'H', occupied: false},
+                {letter: 'N', occupied: false}
+            ],
+            [
+                {letter: 'K', occupied: false},
+                {letter: 'T', occupied: false},
+                {letter: 'M', occupied: false},
+                {letter: 'B', occupied: false}
+            ],
+            [
+                {letter: 'C', occupied: false},
+                {letter: 'R', occupied: false},
+                {letter: 'E', occupied: false},
+                {letter: 'N', occupied: false}
+            ],
+            [
+                {letter: 'F', occupied: false},
+                {letter: 'A', occupied: false},
+                {letter: 'D', occupied: false},
+                {letter: 'T', occupied: false}
+            ]
+        ];
+        this.state = {
+            board: board
+        };
+        const submission = 'CADER';
+        this.highlightWordOnBoard(submission);
+    }
+
+    highlightWordOnBoard(word) {
+        const letters = word.split('');
+        for (let i = 0; i < this.state.board.length; i++) {
+            for (let j = 0; j < this.state.board[0].length; j++) {
+                if (this.state.board[i][j].letter === letters[0]) {
+                    if (this.selectActiveDices(letters, i, j)) {
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    selectActiveDices(letters, i, j) {
+        const matchedDices = [];
+        const board = JSON.parse(JSON.stringify(this.state.board));
+        board[i][j].occupied = true;
+        matchedDices.push([i, j]);
+        let p = 1;
+        /**
+         * Check all the remaining letters from index 1
+         */
+        while (p < letters.length) {
+            let letterMatched = false;
+            for (let m = i-1; m <= i+1; m++) {
+                /**
+                 * Skip if the window is outside the board
+                 */
+                if (m === -1 || m === board.length) {
+                    continue;
+                }
+                for (let n = j-1; n <= j+1; n++) {
+                    /**
+                     * Skip if the window is outside the board or the board is already used
+                     */
+                    if (n === -1 || n === board[0].length || board[m][n].occupied) {
+                        continue;
+                    }
+                    if (board[m][n].letter === letters[p]) {
+                        i = m;
+                        j = n;
+                        board[i][j].occupied = true;
+                        letterMatched = true;
+                        matchedDices.push([i, j]);
+                        break;
+                    }
+                }
+                if (letterMatched) {
+                    p++;
+                    break;
+                }
+            }
+            if (!letterMatched) {
+                if (matchedDices.length === 1) {
+                    return false;
+                }
+                [i, j] = matchedDices.pop();
+                p--;
+            }
+        }
+        // eslint-disable-next-line react/no-direct-mutation-state
+        this.state = {
+            board: board
+        };
+        return true;
+    }
+
+    renderSquare(i, j) {
+        return <Square
+            value={this.state.board[i][j].letter}
+            occupied={this.state.board[i][j].occupied}
+        />;
+    }
+
+    render() {
+        return (
+            <div>
+                <div className="board-row">
+                    {this.renderSquare(0, 0)}
+                    {this.renderSquare(0, 1)}
+                    {this.renderSquare(0, 2)}
+                    {this.renderSquare(0, 3)}
+                </div>
+                <div className="board-row">
+                    {this.renderSquare(1, 0)}
+                    {this.renderSquare(1, 1)}
+                    {this.renderSquare(1, 2)}
+                    {this.renderSquare(1, 3)}
+                </div>
+                <div className="board-row">
+                    {this.renderSquare(2, 0)}
+                    {this.renderSquare(2, 1)}
+                    {this.renderSquare(2, 2)}
+                    {this.renderSquare(2, 3)}
+                </div>
+                <div className="board-row">
+                    {this.renderSquare(3, 0)}
+                    {this.renderSquare(3, 1)}
+                    {this.renderSquare(3, 2)}
+                    {this.renderSquare(3, 3)}
+                </div>
+            </div>
+        );
+    }
+}
+
+class Submission extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            submission: ''
+        };
+        this.handleChange= this.handleChange.bind(this);
+    }
+
+    handleChange({target}) {
+        const transformedWord = target.value.toUpperCase();
+        this.setState({
+            submission: transformedWord
+        });
+        this.props.onWordChange(transformedWord);
+    }
+
+    render() {
+        return (
+            <div className="word-submission">
+                <form>
+                    <input className="input-word"
+                        value={this.state.submission}
+                        type="text" name="submission" placeholder="Enter word here"
+                        onChange={this.handleChange}/>
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+        );
+    }
+}
+
+class Game extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            submission: ''
+        };
+        this.handleWordChange= this.handleWordChange.bind(this);
+    }
+
+    handleWordChange(word) {
+        this.setState({
+            submission: word
+        });
+    }
+
+    render() {
+        return (
+            <div className="game">
+                <div className="game-board">
+                    <Board submission={this.state.submission}/>
+                    <Submission onWordChange={this.handleWordChange}/>
+                </div>
+            </div>
+        );
+    }
+}
+
+// ========================================
+
+ReactDOM.render(
+    <Game/>,
+    document.getElementById('root')
+);
