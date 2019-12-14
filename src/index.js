@@ -42,11 +42,31 @@ class Board extends React.Component {
         this.state = {
             board: board
         };
-        const submission = 'CADER';
-        this.highlightWordOnBoard(submission);
+    }
+
+    componentDidUpdate(prevProps) {
+        if(prevProps.submission !== this.props.submission) {
+            const board = this.resetBoard();
+            this.setState({
+                board: board
+            }, () => {
+                this.highlightWordOnBoard(this.props.submission)
+            });
+        }
+    }
+
+    resetBoard() {
+        let board = JSON.parse(JSON.stringify(this.state.board));
+        for (const row of board) {
+            for (const dice of row) {
+                dice.occupied = false;
+            }
+        }
+        return board;
     }
 
     highlightWordOnBoard(word) {
+        // console.log(this.state.board);
         const letters = word.split('');
         for (let i = 0; i < this.state.board.length; i++) {
             for (let j = 0; j < this.state.board[0].length; j++) {
@@ -61,6 +81,7 @@ class Board extends React.Component {
 
     selectActiveDices(letters, i, j) {
         const matchedDices = [];
+        const unmatchedDices = [];
         const board = JSON.parse(JSON.stringify(this.state.board));
         board[i][j].occupied = true;
         matchedDices.push([i, j]);
@@ -79,9 +100,27 @@ class Board extends React.Component {
                 }
                 for (let n = j-1; n <= j+1; n++) {
                     /**
-                     * Skip if the window is outside the board or the board is already used
+                     * Skip if the window is outside the board
                      */
-                    if (n === -1 || n === board[0].length || board[m][n].occupied) {
+                    if (n === -1 || n === board[0].length) {
+                        continue;
+                    }
+                    /**
+                     * Skip if the dice is the centre of the current window
+                     */
+                    if (m === i && n === j) {
+                        continue;
+                    }
+                    /**
+                     * Skip if the dice is already occupied
+                     */
+                    if (board[m][n].occupied) {
+                        // continue;
+                    }
+                    /**
+                     * Skip if the dice is already unmatched
+                     */
+                    if (unmatchedDices.find((dice) => dice[0] === m && dice[1] === n)) {
                         continue;
                     }
                     if (board[m][n].letter === letters[p]) {
@@ -99,17 +138,18 @@ class Board extends React.Component {
                 }
             }
             if (!letterMatched) {
-                if (matchedDices.length === 1) {
+                if (p === 1) {
                     return false;
                 }
                 [i, j] = matchedDices.pop();
+                board[i][j].occupied = false;
+                unmatchedDices.push([i, j]);
                 p--;
             }
         }
-        // eslint-disable-next-line react/no-direct-mutation-state
-        this.state = {
+        this.setState({
             board: board
-        };
+        });
         return true;
     }
 
@@ -177,7 +217,7 @@ class Submission extends React.Component {
                         value={this.state.submission}
                         type="text" name="submission" placeholder="Enter word here"
                         onChange={this.handleChange}/>
-                    <button type="submit">Submit</button>
+                    <button type="submit" disabled={false}>Submit</button>
                 </form>
             </div>
         );
