@@ -212,25 +212,43 @@ class Submission extends React.Component {
     render() {
         return (
             <div className="word-submission">
-                <form>
-                    <input className="input-word"
-                        value={this.state.submission}
-                        type="text" name="submission" placeholder="Enter word here"
-                        onChange={this.handleChange}/>
-                    <button type="submit" disabled={false}>Submit</button>
-                </form>
+                <input className="input-word"
+                       value={this.state.submission}
+                       type="text" name="submission" placeholder="Enter word here"
+                       onChange={this.handleChange}/>
+                <button type="submit" onClick={this.props.onWordSubmission}>Submit</button>
             </div>
         );
     }
+}
+
+function Scorecard(props) {
+    return (
+        <div className="score-card">
+            <p>Total score: {props.score}</p>
+        </div>
+    );
+}
+
+function SubmissionList(props) {
+    return (
+        <div className="submitted-words">
+            {props.words.map((word) =>
+                <p>{word}</p>
+            )}
+        </div>
+    );
 }
 
 class Game extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            submission: ''
+            submission: '',
+            submittedWords: []
         };
         this.handleWordChange= this.handleWordChange.bind(this);
+        this.handleWordSubmission= this.handleWordSubmission.bind(this);
     }
 
     handleWordChange(word) {
@@ -239,12 +257,40 @@ class Game extends React.Component {
         });
     }
 
+    handleWordSubmission() {
+        const word = this.state.submission;
+        const submittedWords = this.state.submittedWords.slice(0);
+        if (!submittedWords.find(submittedword => submittedword === word)) {
+            if (this.isValidWord(word)) {
+                submittedWords.push(word);
+            } else {
+                this.setState({
+                    submission: ''
+                });
+            }
+        }
+        this.setState({
+            submission: '',
+            submittedWords: submittedWords
+        });
+    }
+
+    isValidWord(word) {
+        const words = ['FARE', 'FADE', 'FRET', 'FACT'];
+        return words.findIndex(wrd => wrd === word) > -1;
+    }
+
     render() {
         return (
             <div className="game">
                 <div className="game-board">
                     <Board submission={this.state.submission}/>
-                    <Submission onWordChange={this.handleWordChange}/>
+                    <Submission
+                        onWordChange={this.handleWordChange}
+                        onWordSubmission={this.handleWordSubmission}
+                    />
+                    <Scorecard score={10}/>
+                    <SubmissionList words={this.state.submittedWords}/>
                 </div>
             </div>
         );
