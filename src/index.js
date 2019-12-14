@@ -50,7 +50,12 @@ class Board extends React.Component {
             this.setState({
                 board: board
             }, () => {
-                this.highlightWordOnBoard(this.props.submission)
+                const valid = this.highlightWordOnBoard(this.props.submission);
+                if (this.props.submission.length < 3) {
+                    this.props.onValidityUpdate(false);
+                } else {
+                    this.props.onValidityUpdate(valid)
+                }
             });
         }
     }
@@ -66,17 +71,17 @@ class Board extends React.Component {
     }
 
     highlightWordOnBoard(word) {
-        // console.log(this.state.board);
         const letters = word.split('');
         for (let i = 0; i < this.state.board.length; i++) {
             for (let j = 0; j < this.state.board[0].length; j++) {
                 if (this.state.board[i][j].letter === letters[0]) {
                     if (this.selectActiveDices(letters, i, j)) {
-                        return;
+                        return true;
                     }
                 }
             }
         }
+        return false;
     }
 
     selectActiveDices(letters, i, j) {
@@ -198,7 +203,9 @@ class Submission extends React.Component {
         this.state = {
             submission: ''
         };
-        this.handleChange= this.handleChange.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.handleKeyDown = this.handleKeyDown.bind(this);
+        this.submitWord = this.submitWord.bind(this);
     }
 
     handleChange({target}) {
@@ -209,14 +216,38 @@ class Submission extends React.Component {
         this.props.onWordChange(transformedWord);
     }
 
+    handleKeyDown(event) {
+        if (this.props.disabled) {
+            return;
+        }
+        if (event.key === 'Enter') {
+            this.submitWord();
+        }
+    }
+
+    submitWord() {
+        if (this.props.disabled) {
+            return;
+        }
+        this.props.onWordSubmission();
+        this.setState({
+            submission: ''
+        });
+    }
+
     render() {
         return (
             <div className="word-submission">
                 <input className="input-word"
                        value={this.state.submission}
                        type="text" name="submission" placeholder="Enter word here"
+                       onKeyDown={this.handleKeyDown}
                        onChange={this.handleChange}/>
-                <button type="submit" onClick={this.props.onWordSubmission}>Submit</button>
+                <button type="submit"
+                        onClick={this.submitWord}
+                        disabled={this.props.disabled}>
+                    Submit
+                </button>
             </div>
         );
     }
@@ -245,10 +276,12 @@ class Game extends React.Component {
         super(props);
         this.state = {
             submission: '',
-            submittedWords: []
+            submittedWords: [],
+            disabled: true
         };
-        this.handleWordChange= this.handleWordChange.bind(this);
-        this.handleWordSubmission= this.handleWordSubmission.bind(this);
+        this.handleWordChange = this.handleWordChange.bind(this);
+        this.handleWordSubmission = this.handleWordSubmission.bind(this);
+        this.updateSubmissionValidity = this.updateSubmissionValidity.bind(this);
     }
 
     handleWordChange(word) {
@@ -271,7 +304,8 @@ class Game extends React.Component {
         }
         this.setState({
             submission: '',
-            submittedWords: submittedWords
+            submittedWords: submittedWords,
+            disabled: true
         });
     }
 
@@ -280,12 +314,21 @@ class Game extends React.Component {
         return words.findIndex(wrd => wrd === word) > -1;
     }
 
+    updateSubmissionValidity(valid) {
+        this.setState({
+            disabled: !valid
+        })
+    }
+
     render() {
         return (
             <div className="game">
                 <div className="game-board">
-                    <Board submission={this.state.submission}/>
+                    <Board
+                        submission={this.state.submission}
+                        onValidityUpdate={this.updateSubmissionValidity}/>
                     <Submission
+                        disabled={this.state.disabled}
                         onWordChange={this.handleWordChange}
                         onWordSubmission={this.handleWordSubmission}
                     />
