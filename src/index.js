@@ -277,7 +277,8 @@ class Game extends React.Component {
         this.state = {
             submission: '',
             submittedWords: [],
-            disabled: true
+            disabled: true,
+            score: 0
         };
         this.handleWordChange = this.handleWordChange.bind(this);
         this.handleWordSubmission = this.handleWordSubmission.bind(this);
@@ -293,19 +294,18 @@ class Game extends React.Component {
     handleWordSubmission() {
         const word = this.state.submission;
         const submittedWords = this.state.submittedWords.slice(0);
+        let score = this.state.score;
         if (!submittedWords.find(submittedword => submittedword === word)) {
             if (this.isValidWord(word)) {
                 submittedWords.push(word);
-            } else {
-                this.setState({
-                    submission: ''
-                });
+                score += this.getScoreForWord(word);
             }
         }
         this.setState({
             submission: '',
             submittedWords: submittedWords,
-            disabled: true
+            disabled: true,
+            score: score
         });
     }
 
@@ -320,6 +320,10 @@ class Game extends React.Component {
         })
     }
 
+    getScoreForWord(word) {
+        return word.length;
+    }
+
     render() {
         return (
             <div className="game">
@@ -332,7 +336,7 @@ class Game extends React.Component {
                         onWordChange={this.handleWordChange}
                         onWordSubmission={this.handleWordSubmission}
                     />
-                    <Scorecard score={10}/>
+                    <Scorecard score={this.state.score}/>
                     <SubmissionList words={this.state.submittedWords}/>
                 </div>
             </div>
