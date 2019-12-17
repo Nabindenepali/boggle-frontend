@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
+const apiUrl = 'http://localhost:3001/';
+
 function Square(props) {
     return (
         <button className={'square' + (props.occupied ? ' occupied' : '')}>
@@ -13,39 +15,25 @@ function Square(props) {
 class Board extends React.Component {
     constructor(props) {
         super(props);
-        const board = [
-            [
-                {letter: 'D', occupied: false},
-                {letter: 'E', occupied: false},
-                {letter: 'H', occupied: false},
-                {letter: 'N', occupied: false}
-            ],
-            [
-                {letter: 'K', occupied: false},
-                {letter: 'T', occupied: false},
-                {letter: 'M', occupied: false},
-                {letter: 'B', occupied: false}
-            ],
-            [
-                {letter: 'C', occupied: false},
-                {letter: 'R', occupied: false},
-                {letter: 'E', occupied: false},
-                {letter: 'N', occupied: false}
-            ],
-            [
-                {letter: 'F', occupied: false},
-                {letter: 'A', occupied: false},
-                {letter: 'D', occupied: false},
-                {letter: 'T', occupied: false}
-            ]
-        ];
+        const board = Board.prepareBoard(props.board);
         this.state = {
             board: board
         };
     }
 
+    static prepareBoard(boardLetters) {
+        return boardLetters.map(function (row) {
+            return row.map(function (letter) {
+                return {
+                    letter: letter,
+                    occupied: false
+                }
+            })
+        });
+    }
+
     componentDidUpdate(prevProps) {
-        if(prevProps.submission !== this.props.submission) {
+        if (prevProps.submission !== this.props.submission) {
             const board = this.resetBoard();
             this.setState({
                 board: board
@@ -96,14 +84,14 @@ class Board extends React.Component {
          */
         while (p < letters.length) {
             let letterMatched = false;
-            for (let m = i-1; m <= i+1; m++) {
+            for (let m = i - 1; m <= i + 1; m++) {
                 /**
                  * Skip if the window is outside the board
                  */
                 if (m === -1 || m === board.length) {
                     continue;
                 }
-                for (let n = j-1; n <= j+1; n++) {
+                for (let n = j - 1; n <= j + 1; n++) {
                     /**
                      * Skip if the window is outside the board
                      */
@@ -264,8 +252,8 @@ function Scorecard(props) {
 function SubmissionList(props) {
     return (
         <div className="submitted-words">
-            {props.words.map((word) =>
-                <p>{word}</p>
+            {props.words.map((word, i) =>
+                <p className="word" key={i}>{word}</p>
             )}
         </div>
     );
@@ -275,14 +263,31 @@ class Game extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            board_id: null,
+            board: [],
             submission: '',
             submittedWords: [],
             disabled: true,
             score: 0
         };
+        this.fetchBoard();
         this.handleWordChange = this.handleWordChange.bind(this);
         this.handleWordSubmission = this.handleWordSubmission.bind(this);
         this.updateSubmissionValidity = this.updateSubmissionValidity.bind(this);
+    }
+
+    fetchBoard() {
+        fetch(apiUrl + 'boggle/new-game')
+            .then(res => res.json())
+            .then(data => {
+                this.setState({
+                    board_id: data.board_id,
+                    board: JSON.parse(data.board)
+                });
+            })
+            .catch((error) => {
+                console.log(error);
+            });
     }
 
     handleWordChange(word) {
@@ -296,22 +301,30 @@ class Game extends React.Component {
         const submittedWords = this.state.submittedWords.slice(0);
         let score = this.state.score;
         if (!submittedWords.find(submittedword => submittedword === word)) {
-            if (this.isValidWord(word)) {
-                submittedWords.push(word);
-                score += this.getScoreForWord(word);
-            }
+            fetch(apiUrl + 'boggle/' + this.state.board_id + '/submit-word/' + word)
+                .then(res => {
+                    if (res.ok) {
+                        return res.json();
+                    } else {
+                        throw new Error('The submitted word is not a valid word.')
+                    }
+                })
+                .then(data => {
+                    submittedWords.push(word);
+                    score += data.score;
+                    this.setState({
+                        submittedWords: submittedWords,
+                        score: score
+                    });
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
         }
         this.setState({
             submission: '',
-            submittedWords: submittedWords,
-            disabled: true,
-            score: score
-        });
-    }
-
-    isValidWord(word) {
-        const words = ['FARE', 'FADE', 'FRET', 'FACT'];
-        return words.findIndex(wrd => wrd === word) > -1;
+            disabled: true
+        })
     }
 
     updateSubmissionValidity(valid) {
@@ -320,17 +333,16 @@ class Game extends React.Component {
         })
     }
 
-    getScoreForWord(word) {
-        return word.length;
-    }
-
     render() {
         return (
             <div className="game">
                 <div className="game-board">
-                    <Board
-                        submission={this.state.submission}
-                        onValidityUpdate={this.updateSubmissionValidity}/>
+                    {this.state.board.length > 0 && (
+                        <Board
+                            board={this.state.board}
+                            submission={this.state.submission}
+                            onValidityUpdate={this.updateSubmissionValidity}/>
+                    )}
                     <Submission
                         disabled={this.state.disabled}
                         onWordChange={this.handleWordChange}
