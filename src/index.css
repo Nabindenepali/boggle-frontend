@@ -7,6 +7,15 @@ ol, ul {
     padding-left: 30px;
 }
 
+.game {
+    padding: 10px;
+}
+
+.game-board {
+    display: inline-block;
+    padding: 10px;
+}
+
 .board-row:after {
     clear: both;
     content: "";
@@ -25,8 +34,6 @@ ol, ul {
     font-weight: bold;
     line-height: 34px;
     height: 34px;
-    margin-right: -1px;
-    margin-top: -1px;
     padding: 0;
     text-align: center;
     width: 34px;
@@ -44,20 +51,27 @@ ol, ul {
     background: #ddd;
 }
 
-.game {
-    display: flex;
-    flex-direction: row;
-}
-
-.game-info {
-    margin-left: 20px;
-}
-
 .word-submission {
-    margin-top: 30px;
+    padding: 10px;
 }
 
 .word-submission button {
     margin-left: -5px;
     text-transform: uppercase;
+}
+
+.score-card {
+    padding: 10px;
+    font-weight: bold;
+}
+
+.submitted-words {
+    padding: 10px;
+    border: 1px solid grey;
+    height: 100%;
+}
+
+.submitted-words .word {
+    width: 33%;
+    float: left;
 }

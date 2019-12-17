@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const apiUrl = 'http://localhost:3001/';
 
@@ -161,7 +162,7 @@ class Board extends React.Component {
 
     render() {
         return (
-            <div>
+            <div className="game-board">
                 <div className="board-row">
                     {this.renderSquare(0, 0)}
                     {this.renderSquare(0, 1)}
@@ -237,7 +238,8 @@ class Submission extends React.Component {
                        type="text" name="submission" placeholder="Enter word here"
                        onKeyDown={this.handleKeyDown}
                        onChange={this.handleChange}/>
-                <button type="submit"
+                <button className="btn btn-sm btn-success"
+                        type="submit"
                         onClick={this.submitWord}
                         disabled={this.props.disabled}>
                     Submit
@@ -258,8 +260,11 @@ function Scorecard(props) {
 function SubmissionList(props) {
     return (
         <div className="submitted-words">
+            <div>
+                <b>List of submitted words</b>
+            </div>
             {props.words.map((word, i) =>
-                <p className="word" key={i}>{word}</p>
+                <div className="word" key={i}>{word}</div>
             )}
         </div>
     );
@@ -341,21 +346,32 @@ class Game extends React.Component {
 
     render() {
         return (
-            <div className="game">
-                <div className="game-board">
-                    {this.state.board.length > 0 && (
-                        <Board
-                            board={this.state.board}
-                            submission={this.state.submission}
-                            onValidityUpdate={this.updateSubmissionValidity}/>
-                    )}
-                    <Submission
-                        disabled={this.state.disabled}
-                        onWordChange={this.handleWordChange}
-                        onWordSubmission={this.handleWordSubmission}
-                    />
-                    <Scorecard score={this.state.score}/>
-                    <SubmissionList words={this.state.submittedWords}/>
+            <div className="container">
+                <div className="game">
+                    <div className="row">
+                        <div className="offset-md-4 col-md-4 text-center">
+                            <h5>Play Boggle</h5>
+                            <h6>Enter valid words of length more than 3 in the input box below.
+                                The words need to be formed using the adjacent dices.
+                            </h6>
+                            {this.state.board.length > 0 && (
+                                <Board
+                                    board={this.state.board}
+                                    submission={this.state.submission}
+                                    onValidityUpdate={this.updateSubmissionValidity}
+                                />
+                            )}
+                            <Submission
+                                disabled={this.state.disabled}
+                                onWordChange={this.handleWordChange}
+                                onWordSubmission={this.handleWordSubmission}
+                            />
+                            <Scorecard score={this.state.score}/>
+                            {this.state.submittedWords.length > 0 && (
+                                <SubmissionList words={this.state.submittedWords}/>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
         );
