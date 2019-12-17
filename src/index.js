@@ -108,7 +108,7 @@ class Board extends React.Component {
                      * Skip if the dice is already occupied
                      */
                     if (board[m][n].occupied) {
-                        // continue;
+                        continue;
                     }
                     /**
                      * Skip if the dice is already unmatched
