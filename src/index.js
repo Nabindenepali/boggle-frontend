@@ -131,13 +131,19 @@ class Board extends React.Component {
                 }
             }
             if (!letterMatched) {
+                /**
+                 * Return false if there's single letter match
+                 */
                 if (p === 1) {
                     return false;
                 }
+                p--;
+                /**
+                 * Get last matched dice
+                 */
                 [i, j] = matchedDices.pop();
                 board[i][j].occupied = false;
                 unmatchedDices.push([i, j]);
-                p--;
             }
         }
         this.setState({
