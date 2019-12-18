@@ -5,6 +5,62 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 const apiUrl = 'http://localhost:3001/';
 
+class Timer extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            remaining: props.duration
+        };
+        this.countDownTimer();
+    }
+
+    countDownTimer() {
+        const that = this;
+        /**
+         * Countdown timer every second
+         */
+        const countDownFunction = setInterval(function() {
+            const remaining = that.state.remaining;
+            if (remaining === 1) {
+                clearInterval(countDownFunction);
+                that.props.onTimeOut();
+            }
+            that.setState({
+                remaining: remaining - 1
+            })
+        }, 1000)
+    }
+
+    formatDuration(duration) {
+        let result = '';
+        const hours = Math.floor(duration / (60*60));
+        const minutes = Math.floor((duration - hours*60*60) / 60);
+        const seconds = duration % 60;
+        if (hours > 0) {
+            result += hours + ':'
+        }
+        if (minutes < 10) {
+            result += '0' + minutes + ':';
+        } else {
+            result += minutes + ':';
+        }
+        if (seconds < 10) {
+            result += '0' + seconds;
+        } else {
+            result += seconds;
+        }
+        return result;
+    }
+
+    render() {
+        return (
+            <div className="timer">
+                {this.formatDuration(this.state.remaining)}
+            </div>
+        )
+    }
+}
+
 function Square(props) {
     return (
         <button className={'square' + (props.occupied ? ' occupied' : '')}>
@@ -285,19 +341,31 @@ function SubmissionList(props) {
 class Game extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
+        this.state = Game.getInitialState();
+        this.fetchBoard();
+        this.handleWordChange = this.handleWordChange.bind(this);
+        this.handleWordSubmission = this.handleWordSubmission.bind(this);
+        this.updateSubmissionValidity = this.updateSubmissionValidity.bind(this);
+        this.handleTimeOut = this.handleTimeOut.bind(this);
+        this.restart = this.restart.bind(this);
+    }
+
+    static getInitialState() {
+        return {
             board_id: null,
             board: [],
             submission: '',
             error: '',
             submittedWords: [],
             disabled: true,
-            score: 0
+            score: 0,
+            ended: false
         };
+    }
+
+    restart() {
+        this.setState(Game.getInitialState())
         this.fetchBoard();
-        this.handleWordChange = this.handleWordChange.bind(this);
-        this.handleWordSubmission = this.handleWordSubmission.bind(this);
-        this.updateSubmissionValidity = this.updateSubmissionValidity.bind(this);
     }
 
     fetchBoard() {
@@ -355,6 +423,12 @@ class Game extends React.Component {
         })
     }
 
+    handleTimeOut() {
+        this.setState({
+            ended: true
+        })
+    }
+
     render() {
         return (
             <div className="container">
@@ -365,6 +439,12 @@ class Game extends React.Component {
                             <h6>Enter valid words of length more than 3 in the input box below.
                                 The words need to be formed using the adjacent dices.
                             </h6>
+                            {!this.state.ended && (
+                                <Timer
+                                    duration={15}
+                                    onTimeOut={this.handleTimeOut}
+                                />
+                            )}
                             {this.state.board.length > 0 && (
                                 <Board
                                     board={this.state.board}
@@ -372,12 +452,27 @@ class Game extends React.Component {
                                     onValidityUpdate={this.updateSubmissionValidity}
                                 />
                             )}
-                            <Submission
-                                error={this.state.error}
-                                disabled={this.state.disabled}
-                                onWordChange={this.handleWordChange}
-                                onWordSubmission={this.handleWordSubmission}
-                            />
+                            {!this.state.ended && (
+                                <Submission
+                                    error={this.state.error}
+                                    disabled={this.state.disabled}
+                                    onWordChange={this.handleWordChange}
+                                    onWordSubmission={this.handleWordSubmission}
+                                />
+                            )}
+                            {this.state.ended && (
+                                <div className="timeout">
+                                    <div className="message">
+                                        Your time is up. You can no longer submit words now.
+                                    </div>
+                                    <button className="btn btn-sm btn-success restart"
+                                            type="submit"
+                                            onClick={this.restart}
+                                    >
+                                        Play New Game
+                                    </button>
+                                </div>
+                            )}
                             <Scorecard score={this.state.score}/>
                             {this.state.submittedWords.length > 0 && (
                                 <SubmissionList words={this.state.submittedWords}/>

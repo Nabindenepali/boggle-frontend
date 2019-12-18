@@ -16,6 +16,12 @@ ol, ul {
     padding: 10px;
 }
 
+.timer {
+    font-size: 24px;
+    font-weight: bold;
+    color: darkblue;
+}
+
 .board-row:after {
     clear: both;
     content: "";
@@ -79,4 +85,8 @@ ol, ul {
     text-align: center;
     width: 33%;
     display: inline-block;
+}
+
+.restart {
+    margin-top: 10px;
 }
