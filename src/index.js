@@ -31,7 +31,7 @@ class Timer extends React.Component {
         }, 1000)
     }
 
-    formatDuration(duration) {
+    static formatDuration(duration) {
         let result = '';
         const hours = Math.floor(duration / (60*60));
         const minutes = Math.floor((duration - hours*60*60) / 60);
@@ -55,7 +55,7 @@ class Timer extends React.Component {
     render() {
         return (
             <div className="timer">
-                {this.formatDuration(this.state.remaining)}
+                {Timer.formatDuration(this.state.remaining)}
             </div>
         )
     }
@@ -364,7 +364,7 @@ class Game extends React.Component {
     }
 
     restart() {
-        this.setState(Game.getInitialState())
+        this.setState(Game.getInitialState());
         this.fetchBoard();
     }
 
@@ -441,7 +441,7 @@ class Game extends React.Component {
                             </h6>
                             {!this.state.ended && (
                                 <Timer
-                                    duration={15}
+                                    duration={180}
                                     onTimeOut={this.handleTimeOut}
                                 />
                             )}
