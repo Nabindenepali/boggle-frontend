@@ -233,17 +233,29 @@ class Submission extends React.Component {
     render() {
         return (
             <div className="word-submission">
-                <input className="input-word"
-                       value={this.state.submission}
-                       type="text" name="submission" placeholder="Enter word here"
-                       onKeyDown={this.handleKeyDown}
-                       onChange={this.handleChange}/>
-                <button className="btn btn-sm btn-success"
-                        type="submit"
-                        onClick={this.submitWord}
-                        disabled={this.props.disabled}>
-                    Submit
-                </button>
+                <div className="row">
+                    <div className="col-md-12">
+                        <input className="input-word"
+                               value={this.state.submission}
+                               type="text" name="submission" placeholder="Enter word here"
+                               onKeyDown={this.handleKeyDown}
+                               onChange={this.handleChange}/>
+                        <button className="btn btn-sm btn-success"
+                                type="submit"
+                                onClick={this.submitWord}
+                                disabled={this.props.disabled}>
+                            Submit
+                        </button>
+                    </div>
+                    {this.props.error && (
+                        <div className="col-md-12">
+                            <div className="error">
+                                {this.props.error}
+                            </div>
+                        </div>
+                    )}
+
+                </div>
             </div>
         );
     }
@@ -277,6 +289,7 @@ class Game extends React.Component {
             board_id: null,
             board: [],
             submission: '',
+            error: '',
             submittedWords: [],
             disabled: true,
             score: 0
@@ -303,7 +316,8 @@ class Game extends React.Component {
 
     handleWordChange(word) {
         this.setState({
-            submission: word
+            submission: word,
+            error: ''
         });
     }
 
@@ -313,23 +327,20 @@ class Game extends React.Component {
         let score = this.state.score;
         if (!submittedWords.find(submittedword => submittedword === word)) {
             fetch(apiUrl + 'boggle/' + this.state.board_id + '/submit-word/' + word)
-                .then(res => {
-                    if (res.ok) {
-                        return res.json();
-                    } else {
-                        throw new Error('The submitted word is not a valid word.')
-                    }
-                })
+                .then(res => res.json())
                 .then(data => {
-                    submittedWords.push(word);
-                    score += data.score;
-                    this.setState({
-                        submittedWords: submittedWords,
-                        score: score
-                    });
-                })
-                .catch((error) => {
-                    console.log(error);
+                    if (data.score) {
+                        submittedWords.push(word);
+                        score += data.score;
+                        this.setState({
+                            submittedWords: submittedWords,
+                            score: score
+                        });
+                    } else {
+                        this.setState({
+                            error: data.message
+                        })
+                    }
                 });
         }
         this.setState({
@@ -362,6 +373,7 @@ class Game extends React.Component {
                                 />
                             )}
                             <Submission
+                                error={this.state.error}
                                 disabled={this.state.disabled}
                                 onWordChange={this.handleWordChange}
                                 onWordSubmission={this.handleWordSubmission}

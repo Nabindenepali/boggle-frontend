@@ -60,6 +60,11 @@ ol, ul {
     text-transform: uppercase;
 }
 
+.word-submission .error {
+    margin-top: 10px;
+    color: red;
+}
+
 .score-card {
     padding: 10px;
     font-weight: bold;
