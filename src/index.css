@@ -68,10 +68,10 @@ ol, ul {
 .submitted-words {
     padding: 10px;
     border: 1px solid grey;
-    height: 100%;
 }
 
 .submitted-words .word {
+    text-align: center;
     width: 33%;
-    float: left;
+    display: inline-block;
 }
